@@ -4,12 +4,35 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageSquare, HelpCircle, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
+import { useMemo } from "react"
 
 interface StatsCardsProps {
+  comments?: any[]
   onViewHighPriority?: () => void
 }
 
-export function StatsCards({ onViewHighPriority }: StatsCardsProps) {
+export function StatsCards({ comments = [], onViewHighPriority }: StatsCardsProps) {
+  const stats = useMemo(() => {
+    console.log("[v0] Calculating stats from", comments.length, "comments")
+
+    const totalComments = comments.length
+
+    const questions = comments.filter((comment) => comment.isQuestion === true).length
+
+    const highPriority = comments.filter((comment) => comment.priorityScore > 300).length
+
+    const questionPercentage = totalComments > 0 ? Math.round((questions / totalComments) * 100) : 0
+
+    console.log("[v0] Stats calculated:", { totalComments, questions, highPriority, questionPercentage })
+
+    return {
+      totalComments,
+      questions,
+      highPriority,
+      questionPercentage,
+    }
+  }, [comments])
+
   return (
     <div className="grid gap-6 md:grid-cols-3">
       <Card className="border-2 hover:border-red-200 dark:hover:border-red-900 transition-colors hover:shadow-lg">
@@ -20,8 +43,10 @@ export function StatsCards({ onViewHighPriority }: StatsCardsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-1">
-          <div className="text-3xl font-bold">1,284</div>
-          <p className="text-sm text-green-600 dark:text-green-500 font-medium">+12% from last week</p>
+          <div className="text-3xl font-bold">{stats.totalComments.toLocaleString()}</div>
+          <p className="text-sm text-muted-foreground font-medium">
+            {stats.totalComments === 0 ? "No comments yet" : "Across all videos"}
+          </p>
         </CardContent>
       </Card>
       <Card className="border-2 hover:border-red-200 dark:hover:border-red-900 transition-colors hover:shadow-lg">
@@ -32,8 +57,8 @@ export function StatsCards({ onViewHighPriority }: StatsCardsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-1">
-          <div className="text-3xl font-bold">342</div>
-          <p className="text-sm text-muted-foreground font-medium">27% of total comments</p>
+          <div className="text-3xl font-bold">{stats.questions.toLocaleString()}</div>
+          <p className="text-sm text-muted-foreground font-medium">{stats.questionPercentage}% of total comments</p>
         </CardContent>
       </Card>
       <Card className="border-2 hover:border-red-200 dark:hover:border-red-900 transition-colors hover:shadow-lg md:col-span-1">
@@ -44,9 +69,11 @@ export function StatsCards({ onViewHighPriority }: StatsCardsProps) {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="text-3xl font-bold">89</div>
+          <div className="text-3xl font-bold">{stats.highPriority.toLocaleString()}</div>
           <div className="flex items-center justify-between">
-            <p className="text-sm text-orange-600 dark:text-orange-500 font-medium">Needs your attention</p>
+            <p className="text-sm text-orange-600 dark:text-orange-500 font-medium">
+              {stats.highPriority === 0 ? "All caught up!" : "Needs your attention"}
+            </p>
             <Button
               variant="ghost"
               size="sm"

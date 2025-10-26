@@ -4,87 +4,88 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ThumbsUp, MessageSquare, ExternalLink, TrendingUp } from "lucide-react"
+import { ThumbsUp, MessageSquare, ExternalLink, TrendingUp, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ReplyDialog } from "@/components/reply-dialog"
 import { CommentsFilter } from "@/components/comments-filter"
 
-// Mock data based on the MVP spec
-const mockComments = [
-  {
-    id: "1",
-    author: "TechEnthusiast42",
-    authorAvatar: "/abstract-geometric-shapes.png",
-    text: "This tutorial was amazing! Could you make a follow-up video about advanced techniques?",
-    videoTitle: "Getting Started with Next.js 15",
-    likes: 234,
-    isQuestion: true,
-    priorityScore: 334,
-    timestamp: "2 hours ago",
-    replied: false,
-  },
-  {
-    id: "2",
-    author: "CodeMaster99",
-    authorAvatar: "/abstract-geometric-shapes.png",
-    text: "What's the difference between server and client components? I'm still confused about when to use each.",
-    videoTitle: "React Server Components Explained",
-    likes: 189,
-    isQuestion: true,
-    priorityScore: 289,
-    timestamp: "5 hours ago",
-    replied: false,
-  },
-  {
-    id: "3",
-    author: "WebDevJourney",
-    authorAvatar: "/diverse-group-collaborating.png",
-    text: "Great content as always! Keep up the excellent work.",
-    videoTitle: "Getting Started with Next.js 15",
-    likes: 156,
-    isQuestion: false,
-    priorityScore: 156,
-    timestamp: "1 day ago",
-    replied: true,
-  },
-  {
-    id: "4",
-    author: "LearnToCode2024",
-    authorAvatar: "/abstract-geometric-shapes.png",
-    text: "How do you handle authentication in production? Would love to see a video on that!",
-    videoTitle: "Building a Full-Stack App",
-    likes: 312,
-    isQuestion: true,
-    priorityScore: 412,
-    timestamp: "3 hours ago",
-    replied: false,
-  },
-  {
-    id: "5",
-    author: "DevNewbie",
-    authorAvatar: "/abstract-geometric-shapes.png",
-    text: "Thanks for explaining this so clearly! Finally understand the concept.",
-    videoTitle: "React Server Components Explained",
-    likes: 87,
-    isQuestion: false,
-    priorityScore: 87,
-    timestamp: "6 hours ago",
-    replied: true,
-  },
-]
+interface Comment {
+  id: string
+  author: string
+  authorAvatar: string
+  text: string
+  videoTitle: string
+  videoId: string
+  likes: number
+  isQuestion: boolean
+  priorityScore: number
+  timestamp: string
+  replied: boolean
+}
 
 type FilterType = "all" | "questions" | "unreplied" | "high-priority"
 type SortType = "priority" | "recent" | "likes"
 
 interface CommentsTableProps {
   initialFilter?: FilterType
+  onCommentsLoaded?: (comments: Comment[]) => void
+  channelId?: string | null
 }
 
-export function CommentsTable({ initialFilter = "all" }: CommentsTableProps) {
-  const [comments] = useState(mockComments)
+export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channelId }: CommentsTableProps) {
+  const [comments, setComments] = useState<Comment[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedComment, setSelectedComment] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>(initialFilter)
   const [sort, setSort] = useState<SortType>("priority")
+
+  useEffect(() => {
+    console.log("[v0] CommentsTable received channelId:", channelId)
+    if (channelId) {
+      fetchComments()
+    } else {
+      console.log("[v0] No channelId provided, waiting...")
+      setLoading(false)
+    }
+  }, [channelId])
+
+  const fetchComments = async () => {
+    if (!channelId) {
+      console.log("[v0] Cannot fetch comments: no channelId")
+      setLoading(false)
+      return
+    }
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      console.log("[v0] Fetching comments for channelId:", channelId)
+      const response = await fetch(`/api/youtube/comments?channelId=${channelId}`)
+      const data = await response.json()
+
+      console.log("[v0] Comments API response:", data)
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch comments")
+      }
+
+      const fetchedComments = data.comments || []
+      console.log("[v0] Setting", fetchedComments.length, "comments in state")
+      setComments(fetchedComments)
+
+      if (onCommentsLoaded) {
+        console.log("[v0] Calling onCommentsLoaded with", fetchedComments.length, "comments")
+        onCommentsLoaded(fetchedComments)
+      }
+    } catch (err: any) {
+      console.error("[v0] Error fetching comments:", err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     const handleFilterHighPriority = () => {
@@ -118,6 +119,48 @@ export function CommentsTable({ initialFilter = "all" }: CommentsTableProps) {
     // For "recent", we'd need actual timestamps, but for now use priority as fallback
     return b.priorityScore - a.priorityScore
   })
+
+  if (!channelId) {
+    return (
+      <Card className="border-2 shadow-lg">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="p-4 bg-muted/50 rounded-full w-fit mx-auto mb-4">
+            <MessageSquare className="h-12 w-12 text-muted-foreground opacity-50" />
+          </div>
+          <p className="text-lg font-semibold text-muted-foreground">Select a YouTube channel to view comments</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (loading) {
+    return (
+      <Card className="border-2 shadow-lg">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <Loader2 className="h-12 w-12 animate-spin text-red-600 mb-4" />
+          <p className="text-lg font-semibold text-muted-foreground">Loading comments...</p>
+          <p className="text-sm text-muted-foreground mt-2">Fetching your YouTube comments</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card className="border-2 shadow-lg border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20">
+        <CardContent className="py-16 text-center">
+          <div className="p-4 bg-red-100 dark:bg-red-950/50 rounded-full w-fit mx-auto mb-4">
+            <MessageSquare className="h-12 w-12 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-2">Failed to Load Comments</h3>
+          <p className="text-sm text-red-700 dark:text-red-300 mb-4">{error}</p>
+          <Button onClick={fetchComments} variant="outline" className="bg-transparent">
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>
@@ -200,9 +243,15 @@ export function CommentsTable({ initialFilter = "all" }: CommentsTableProps) {
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Reply
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-9 font-semibold">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        View on YouTube
+                      <Button variant="ghost" size="sm" className="h-9 font-semibold" asChild>
+                        <a
+                          href={`https://www.youtube.com/watch?v=${comment.videoId}&lc=${comment.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View on YouTube
+                        </a>
                       </Button>
                     </div>
                   </div>

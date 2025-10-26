@@ -2,17 +2,21 @@
 
 import { Youtube, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 
 export function DashboardHeader() {
   const router = useRouter()
+  const supabase = createClient()
 
-  const handleLogout = () => {
-    router.push("/")
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/login")
+    router.refresh()
   }
 
   return (
-    <header className="border-b-2 bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/90 sticky top-0 z-50 shadow-sm">
+    <header className="border-b-2 bg-background/90 backdrop-blur-xl supports-backdrop-filter:bg-background/90 sticky top-0 z-50 shadow-sm">
       <div className="container mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-red-600 rounded-lg shadow-lg shadow-red-600/30">

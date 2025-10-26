@@ -48,7 +48,7 @@ export function ReplyDialog({ comment, onClose, onSubmit }: ReplyDialogProps) {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-white dark:bg-zinc-900 border shadow-lg">
         <DialogHeader>
           <DialogTitle>Reply to Comment</DialogTitle>
           <DialogDescription>Your reply will be posted publicly on YouTube</DialogDescription>

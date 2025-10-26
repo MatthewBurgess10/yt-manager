@@ -4,14 +4,14 @@ import { Youtube, TrendingUp, MessageSquare, Zap, ArrowRight, CheckCircle2 } fro
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-red-50/30 dark:to-red-950/10">
-      <nav className="border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-linear-to-br from-background via-background to-red-50/30 dark:to-red-950/10">
+      <nav className="border-b bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/80 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-red-600 rounded-lg">
               <Youtube className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+            <span className="font-bold text-xl bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
               CommentIQ
             </span>
           </div>
