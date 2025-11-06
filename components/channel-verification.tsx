@@ -106,7 +106,7 @@ export function ChannelVerification({ onChannelSelect }: ChannelVerificationProp
       <Card className="border-2 border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20">
         <CardContent className="py-6">
           <div className="flex items-start gap-4">
-            <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1 space-y-2">
               <h3 className="font-semibold text-red-900 dark:text-red-100">YouTube Channel Not Found</h3>
               <p className="text-sm text-red-700 dark:text-red-300">

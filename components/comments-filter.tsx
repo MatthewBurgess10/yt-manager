@@ -52,15 +52,15 @@ export function CommentsFilter({ filter, sort, onFilterChange, onSortChange }: C
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
+            variant="secondary"
             size="default"
-            className="h-10 px-4 font-semibold border-2 hover:border-red-200 dark:hover:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 bg-transparent"
+            className="h-10 px-4 font-semibold border-2 hover:border-red-200 dark:hover:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30"
           >
             <Filter className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Filter:</span> {getFilterLabel()}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent side="bottom" align="end" className="w-56">
           <DropdownMenuLabel className="text-base">Filter by</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuRadioGroup value={filter} onValueChange={(value) => onFilterChange(value as FilterType)}>
@@ -83,15 +83,15 @@ export function CommentsFilter({ filter, sort, onFilterChange, onSortChange }: C
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            variant="outline"
+            variant="secondary"
             size="default"
-            className="h-10 px-4 font-semibold border-2 hover:border-red-200 dark:hover:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 bg-transparent"
+            className="h-10 px-4 font-semibold border-2 hover:border-red-200 dark:hover:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30"
           >
             <ArrowUpDown className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Sort:</span> {getSortLabel()}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent side="bottom" align="end" className="w-56">
           <DropdownMenuLabel className="text-base">Sort by</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuRadioGroup value={sort} onValueChange={(value) => onSortChange(value as SortType)}>

@@ -36,11 +36,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  // Redirect to dashboard if already authenticated
+  // Redirect to dashboard if already authenticated and on login page
   if (user && request.nextUrl.pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
+  // Allow all authenticated users to access dashboard
+  // The dashboard page itself will show the paywall if needed
   return response
 }
 

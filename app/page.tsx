@@ -33,7 +33,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance leading-tight">
               Never Miss an{" "}
-              <span className="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
                 Important Comment
               </span>{" "}
               Again
@@ -54,9 +54,9 @@ export default function HomePage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8 h-12 border-2 bg-transparent">
+            {/* <Button size="lg" variant="outline" className="text-lg px-8 h-12 border-2 bg-transparent">
               Watch Demo
-            </Button>
+            </Button> */}
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mt-20 text-left">

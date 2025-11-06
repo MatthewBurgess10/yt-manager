@@ -9,9 +9,11 @@ import { useMemo } from "react"
 interface StatsCardsProps {
   comments?: any[]
   onViewHighPriority?: () => void
+  handleAllComments?: () => void
+  handleAllQuestions?: () => void
 }
 
-export function StatsCards({ comments = [], onViewHighPriority }: StatsCardsProps) {
+export function StatsCards({ comments = [], onViewHighPriority, handleAllComments, handleAllQuestions }: StatsCardsProps) {
   const stats = useMemo(() => {
     console.log("[v0] Calculating stats from", comments.length, "comments")
 
@@ -44,9 +46,20 @@ export function StatsCards({ comments = [], onViewHighPriority }: StatsCardsProp
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="text-3xl font-bold">{stats.totalComments.toLocaleString()}</div>
-          <p className="text-sm text-muted-foreground font-medium">
-            {stats.totalComments === 0 ? "No comments yet" : "Across all videos"}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground font-medium">
+              {stats.totalComments === 0 ? "No comments yet" : "Across all videos"}
+            </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-semibold"
+              onClick={handleAllComments}
+              >
+              View All
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card className="border-2 hover:border-red-200 dark:hover:border-red-900 transition-colors hover:shadow-lg">
@@ -58,7 +71,19 @@ export function StatsCards({ comments = [], onViewHighPriority }: StatsCardsProp
         </CardHeader>
         <CardContent className="space-y-1">
           <div className="text-3xl font-bold">{stats.questions.toLocaleString()}</div>
-          <p className="text-sm text-muted-foreground font-medium">{stats.questionPercentage}% of total comments</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground font-medium">{stats.questionPercentage}% of total comments</p>
+          
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 font-semibold"
+              onClick={handleAllQuestions}
+            >
+              View All
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
       <Card className="border-2 hover:border-red-200 dark:hover:border-red-900 transition-colors hover:shadow-lg md:col-span-1">

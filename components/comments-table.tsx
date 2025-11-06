@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { CommentsFilter } from "@/components/comments-filter"
 
 interface Comment {
   id: string
+  commentId: string
   author: string
   authorAvatar: string
   text: string
@@ -19,6 +20,7 @@ interface Comment {
   likes: number
   isQuestion: boolean
   priorityScore: number
+  relativeScore?: string
   timestamp: string
   replied: boolean
 }
@@ -39,6 +41,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
   const [selectedComment, setSelectedComment] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>(initialFilter)
   const [sort, setSort] = useState<SortType>("priority")
+  const [highPriorityThreshold, setHighPriorityThreshold] = useState(300)
 
   useEffect(() => {
     console.log("[v0] CommentsTable received channelId:", channelId)
@@ -72,6 +75,10 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
       }
 
       const fetchedComments = data.comments || []
+      if (data.channelProfile?.highPriorityThreshold) {
+        setHighPriorityThreshold(data.channelProfile.highPriorityThreshold)
+        console.log("[v0] High priority threshold set to:", data.channelProfile.highPriorityThreshold)
+      }
       console.log("[v0] Setting", fetchedComments.length, "comments in state")
       setComments(fetchedComments)
 
@@ -87,13 +94,34 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
     }
   }
 
+  //handle high priority filter event
   useEffect(() => {
     const handleFilterHighPriority = () => {
-      setFilter("high-priority")
+      setFilter("high-priority") // change filter to high-priority
     }
 
     window.addEventListener("filterHighPriority", handleFilterHighPriority)
     return () => window.removeEventListener("filterHighPriority", handleFilterHighPriority)
+  }, [])
+
+  //handle all comments filter event
+  useEffect(() => {
+    const handleFilterAllComments = () => {
+      setFilter("all") // change filter to all
+    }
+
+    window.addEventListener("filterAllComments", handleFilterAllComments)
+    return () => window.removeEventListener("filterAllComments", handleFilterAllComments)
+  }, [])
+
+  //handle all questions filter event
+  useEffect(() => {
+    const handleFilterAllQuestions = () => {
+      setFilter("questions") // change filter to questions
+    }
+
+    window.addEventListener("filterAllQuestions", handleFilterAllQuestions)
+    return () => window.removeEventListener("filterAllQuestions", handleFilterAllQuestions)
   }, [])
 
   const handleCloseReply = () => {
@@ -109,7 +137,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
   const filteredComments = comments.filter((comment) => {
     if (filter === "questions") return comment.isQuestion
     if (filter === "unreplied") return !comment.replied
-    if (filter === "high-priority") return comment.priorityScore > 300
+    if (filter === "high-priority") return comment.likes >= highPriorityThreshold
     return true
   })
 
@@ -208,6 +236,14 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                               Question
                             </Badge>
                           )}
+                          {comment.likes >= highPriorityThreshold && (
+                            <Badge
+                              variant="secondary"
+                              className="text-xs font-semibold bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900"
+                            >
+                              High Priority
+                            </Badge>
+                          )}
                           {comment.replied && (
                             <Badge
                               variant="outline"
@@ -219,11 +255,14 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                         </div>
                         <p className="text-sm text-muted-foreground font-medium">{comment.videoTitle}</p>
                       </div>
-                      <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900">
-                        <TrendingUp className="h-4 w-4 text-red-600 dark:text-red-500" />
-                        <span className="text-sm font-bold text-red-600 dark:text-red-500">
-                          {comment.priorityScore}
-                        </span>
+                      <div className="flex flex-col items-end gap-1">
+                        {comment.relativeScore && (
+                          <div className="text-xs text-muted-foreground font-medium">{comment.relativeScore} avg</div>
+                        )}
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-lg">
+                          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm font-bold">{comment.priorityScore}</span>
+                        </div>
                       </div>
                     </div>
 
@@ -243,15 +282,17 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Reply
                       </Button>
-                      <Button variant="ghost" size="sm" className="h-9 font-semibold" asChild>
-                        <a
-                          href={`https://www.youtube.com/watch?v=${comment.videoId}&lc=${comment.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          View on YouTube
-                        </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 font-semibold"
+                        onClick={() => {
+                          const url = `https://www.youtube.com/watch?v=${comment.videoId}&lc=${comment.commentId}#${comment.commentId}`
+                          window.open(url, "_blank")
+                        }}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View on YouTube
                       </Button>
                     </div>
                   </div>
@@ -259,6 +300,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
               ))}
             </div>
           )}
+
         </CardContent>
       </Card>
 
