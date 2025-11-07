@@ -105,7 +105,7 @@ export default function DashboardPage() {
           <div className="space-y-3 mb-6">
             <div className="flex items-start">
               <svg
-                className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
+                className="w-5 h-5 text-green-500 mt-0.5 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -123,7 +123,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-start">
               <svg
-                className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
+                className="w-5 h-5 text-green-500 mt-0.5 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -141,7 +141,7 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-start">
               <svg
-                className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0"
+                className="w-5 h-5 text-green-500 mt-0.5 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -247,7 +247,7 @@ export default function DashboardPage() {
           </h2>
           <ol className="space-y-3">
             <li className="flex items-start">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+              <span className="shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
                 1
               </span>
               <span className="text-gray-700">
@@ -255,7 +255,7 @@ export default function DashboardPage() {
               </span>
             </li>
             <li className="flex items-start">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+              <span className="shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
                 2
               </span>
               <span className="text-gray-700">
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               </span>
             </li>
             <li className="flex items-start">
-              <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
+              <span className="shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold mr-3">
                 3
               </span>
               <span className="text-gray-700">

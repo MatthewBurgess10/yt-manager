@@ -35,7 +35,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-red-50/30 dark:to-red-950/10 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-background via-background to-red-50/30 dark:to-red-950/10 p-4">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-8 items-center">
         {/* Left side - Branding and features */}
         <div className="hidden lg:block space-y-8">
@@ -53,7 +53,7 @@ export default function LoginPage() {
 
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-950 rounded-lg h-fit">
+              <div className="shrink-0 p-2 bg-blue-100 dark:bg-blue-950 rounded-lg h-fit">
                 <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
@@ -65,7 +65,7 @@ export default function LoginPage() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-shrink-0 p-2 bg-green-100 dark:bg-green-950 rounded-lg h-fit">
+              <div className="shrink-0 p-2 bg-green-100 dark:bg-green-950 rounded-lg h-fit">
                 <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
               <div>
@@ -75,7 +75,7 @@ export default function LoginPage() {
             </div>
 
             <div className="flex gap-4">
-              <div className="flex-shrink-0 p-2 bg-purple-100 dark:bg-purple-950 rounded-lg h-fit">
+              <div className="shrink-0 p-2 bg-purple-100 dark:bg-purple-950 rounded-lg h-fit">
                 <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>

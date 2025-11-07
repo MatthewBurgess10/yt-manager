@@ -130,7 +130,7 @@ export function ChannelVerification({ onChannelSelect }: ChannelVerificationProp
     <Card className="border-2 border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20">
       <CardContent className="py-6">
         <div className="flex items-start gap-4">
-          <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+          <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="font-semibold text-green-900 dark:text-green-100 mb-3">YouTube Channel Connected</h3>
             <div className="flex items-center gap-4">
