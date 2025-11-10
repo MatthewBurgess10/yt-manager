@@ -1,10 +1,12 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { CommentsTable } from "@/components/comments-table"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { StatsCards } from "@/components/stats-cards"
 import { ChannelVerification } from "@/components/channel-verification"
+
+
 
 export default function DashboardPage() {
   const commentsTableRef = useRef<HTMLDivElement>(null)
@@ -37,5 +39,6 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+    
   )
 }

@@ -42,7 +42,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Allow all authenticated users to access dashboard
-  // The dashboard page itself will show the paywall if needed
   return response
 }
 
