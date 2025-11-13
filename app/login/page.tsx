@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Youtube, Sparkles, TrendingUp, MessageSquare } from "lucide-react"
+import { Youtube, Sparkles, TrendingUp, MessageSquare, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
@@ -40,70 +40,76 @@ export default function LoginPage() {
         {/* Left side - Branding and features */}
         <div className="hidden lg:block space-y-8">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-red-600 rounded-xl">
+            <Link href="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="p-3 bg-red-600 rounded-lg">
                 <Youtube className="h-8 w-8 text-white" />
               </div>
-              <h1 className="text-4xl font-bold text-balance">CommentIQ</h1>
-            </div>
+              <h1 className="text-4xl font-bold text-balance">ReplyYT</h1>
+            </Link>
             <p className="text-xl text-muted-foreground text-balance">
-              Smart YouTube comment management for creators who care about their community
+              Smart YouTube comment management so you can engage with your community instead of drowning in chaos.
             </p>
           </div>
 
           <div className="space-y-6">
             <div className="flex gap-4">
-              <div className="shrink-0 p-2 bg-blue-100 dark:bg-blue-950 rounded-lg h-fit">
-                <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="shrink-0 p-3 bg-red-100 dark:bg-red-950/50 rounded-lg h-fit">
+                <Sparkles className="h-5 w-5 text-red-600 dark:text-red-500" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">AI-Powered Ranking</h3>
+                <h3 className="font-semibold mb-1">Smart Filtering & Ranking</h3>
                 <p className="text-sm text-muted-foreground">
-                  Automatically prioritize comments by engagement and questions
+                  AI sorts comments by urgency so you focus on what matters most
                 </p>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="shrink-0 p-2 bg-green-100 dark:bg-green-950 rounded-lg h-fit">
-                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <div className="shrink-0 p-3 bg-red-100 dark:bg-red-950/50 rounded-lg h-fit">
+                <TrendingUp className="h-5 w-5 text-red-600 dark:text-red-500" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Priority Insights</h3>
-                <p className="text-sm text-muted-foreground">See which comments need your attention most</p>
+                <h3 className="font-semibold mb-1">Instant Insights</h3>
+                <p className="text-sm text-muted-foreground">
+                  See which comments boost engagement and community loyalty
+                </p>
               </div>
             </div>
 
             <div className="flex gap-4">
-              <div className="shrink-0 p-2 bg-purple-100 dark:bg-purple-950 rounded-lg h-fit">
-                <MessageSquare className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <div className="shrink-0 p-3 bg-red-100 dark:bg-red-950/50 rounded-lg h-fit">
+                <MessageSquare className="h-5 w-5 text-red-600 dark:text-red-500" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Quick Replies</h3>
-                <p className="text-sm text-muted-foreground">Respond to your community faster than ever</p>
+                <h3 className="font-semibold mb-1">Reply-Ready View</h3>
+                <p className="text-sm text-muted-foreground">
+                  Respond directly from the dashboard without losing context
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Right side - Login card */}
-        <Card className="w-full shadow-xl border-2">
+        <Card className="w-full shadow-2xl border-red-200 dark:border-red-900/50">
           <CardHeader className="text-center space-y-3 pb-6">
             <div className="flex justify-center mb-2 lg:hidden">
-              <div className="p-3 bg-red-600 rounded-xl">
-                <Youtube className="h-10 w-10 text-white" />
-              </div>
+              <Link href="/" className="hover:opacity-80 transition-opacity">
+                <div className="p-3 bg-red-600 rounded-lg">
+                  <Youtube className="h-10 w-10 text-white" />
+                </div>
+              </Link>
             </div>
-            <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
+            <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
             <CardDescription className="text-base">
-              Sign in with your Google account to access your YouTube comment dashboard
+              Sign in with Google to start managing your YouTube comments smarter.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <Button
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full h-12 text-base font-semibold bg-red-600 hover:bg-red-700"
+              className="w-full h-12 text-base font-semibold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20"
               size="lg"
             >
               <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -131,36 +137,36 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
+              {/* <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">Secure authentication</span>
-              </div>
+              </div> */}
             </div>
 
-            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="text-xs font-medium">What you'll get access to:</p>
-              <ul className="text-xs text-muted-foreground space-y-1">
+            <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-4 space-y-3">
+              <p className="text-xs font-medium">You'll get access to:</p>
+              <ul className="text-xs text-muted-foreground space-y-2">
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                  View and manage YouTube comments
+                  <CheckCircle2 className="h-4 w-4 text-red-600 shrink-0" />
+                  Smart comment filtering and ranking
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                  AI-powered comment prioritization
+                  <CheckCircle2 className="h-4 w-4 text-red-600 shrink-0" />
+                  Real-time insights on high-priority comments
                 </li>
                 <li className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-600" />
-                  Quick reply functionality
+                  <CheckCircle2 className="h-4 w-4 text-red-600 shrink-0" />
+                  Reply-ready dashboard with instant sync
                 </li>
               </ul>
             </div>
 
             <p className="text-xs text-center text-muted-foreground leading-relaxed">
               By signing in, you agree to our{" "}
-              <Link href="/terms" className="underline hover:text-foreground">
+              <Link href="/terms" className="underline hover:text-foreground transition-colors">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="underline hover:text-foreground">
+              <Link href="/privacy" className="underline hover:text-foreground transition-colors">
                 Privacy Policy
               </Link>
             </p>

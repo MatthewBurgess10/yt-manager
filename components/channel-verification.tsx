@@ -104,7 +104,7 @@ export function ChannelVerification({ onChannelSelect }: ChannelVerificationProp
   if (error) {
     return (
       <Card className="border-2 border-red-200 bg-red-50/50 dark:border-red-900 dark:bg-red-950/20">
-        <CardContent className="py-6">
+        <CardContent className="py-3">
           <div className="flex items-start gap-4">
             <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1 space-y-2">
@@ -128,7 +128,7 @@ export function ChannelVerification({ onChannelSelect }: ChannelVerificationProp
 
   return (
     <Card className="border-2 border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20">
-      <CardContent className="py-6">
+      <CardContent className="py-3">
         <div className="flex items-start gap-4">
           <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
           <div className="flex-1">
