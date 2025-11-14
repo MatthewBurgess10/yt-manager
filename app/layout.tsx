@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
+import Script from 'next/script'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: 'ReplyYT',
   description: 'A simple YouTube reply app with improved filtering and organization features.',
 }
+// app/layout.js
+
+
 
 
 export default function RootLayout({
@@ -21,7 +24,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         {children}
-        <Analytics />
+        {/* Simple Analytics script */}
+        <Script src="https://scripts.simpleanalyticscdn.com/latest.js"  />
 
         {/* Feedback Widget */}
         <script
