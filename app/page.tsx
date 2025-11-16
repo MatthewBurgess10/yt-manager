@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Youtube, TrendingUp, MessageSquare, Zap, ArrowRight, CheckCircle2, Sparkles, Target, Clock, Eye} from "lucide-react"
+import Image from "next/image";
 
 export default function HomePage() {
   return (
@@ -9,12 +10,10 @@ export default function HomePage() {
       <nav className="border-b bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/80 sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-600 rounded-lg">
-              <Youtube className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-xl bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
+            <Image src="/replyyt_icon_new.png" alt="ReplyYT Logo" width={120} height={120}/>
+            {/* <span className="font-bold text-xl bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
               ReplyYT
-            </span>
+            </span> */}
           </div>
           <Link href="/login">
             <Button size="lg" className="shadow-lg shadow-red-600/20">
@@ -342,13 +341,13 @@ export default function HomePage() {
                 <span className="font-bold text-lg">ReplyYT</span>
               </div>
               <nav className="flex gap-8 text-sm">
+                <Link href="/termsofservice" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Terms of Service
+                </Link>
+                <Link href="/privacypolicy" className="text-muted-foreground hover:text-foreground transition-colors">
+                  Privacy Policy
+                </Link>
                 {/* <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Product
-                </Link>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Pricing
-                </Link>
-                <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
                   Blog
                 </Link> */}
 
