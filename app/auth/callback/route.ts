@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient, flushPendingCookies } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
@@ -14,13 +14,24 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get('x-forwarded-host')
       const isLocalEnv = process.env.NODE_ENV === 'development'
 
+      // Grab any cookies Supabase requested we set during the exchange.
+      const pending = flushPendingCookies()
+
+      // Build the final redirect and attach cookies to it.
+      let finalRedirect: ReturnType<typeof NextResponse.redirect>
       if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`)
+        finalRedirect = NextResponse.redirect(`${origin}${next}`)
       } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+        finalRedirect = NextResponse.redirect(`https://${forwardedHost}${next}`)
       } else {
-        return NextResponse.redirect(`${origin}${next}`)
+        finalRedirect = NextResponse.redirect(`${origin}${next}`)
       }
+
+      pending.forEach(({ name, value, options }) => {
+        finalRedirect.cookies.set(name, value, options)
+      })
+
+      return finalRedirect
     }
   }
 
