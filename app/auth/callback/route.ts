@@ -17,6 +17,15 @@ export async function GET(request: Request) {
       // Grab any cookies Supabase requested we set during the exchange.
       const pending = flushPendingCookies()
 
+      // Debug logging to help trace cookie propagation during OAuth.
+      // Run the dev server and watch the terminal for this output after an OAuth redirect.
+      try {
+        console.log(`[auth/callback] redirect target=${next} pendingCookiesCount=${pending.length}`)
+        pending.forEach(c => console.log(`[auth/callback] cookie: ${c.name} s=${JSON.stringify(c.options)}`))
+      } catch (e) {
+        // no-op in environments that don't support console
+      }
+
       // Build the final redirect and attach cookies to it.
       let finalRedirect: ReturnType<typeof NextResponse.redirect>
       if (isLocalEnv) {
