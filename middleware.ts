@@ -11,6 +11,10 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Buffer for cookies that Supabase requests to set. We attach these to
+  // the final response or any redirect response so cookies aren't lost.
+  const pendingCookies: { name: string; value: string; options?: any }[] = []
+
   // 2. CREATE THE SUPABASE CLIENT
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,8 +27,10 @@ export async function middleware(request: NextRequest) {
         // CORRECTED setAll implementation:
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            // CRITICAL: Attach the cookies to the 'response' object
-            // which will be returned at the end of the middleware.
+            // Save to buffer so we can copy them to any redirect responses.
+            pendingCookies.push({ name, value, options })
+
+            // Also attach to the normal response (non-redirect flow).
             response.cookies.set(name, value, options)
           })
         },
@@ -43,13 +49,21 @@ export async function middleware(request: NextRequest) {
 
   // Redirect to login if not authenticated and trying to access dashboard
   if (!user && pathname.startsWith("/dashboard")) {
-    // Note: Use a clean NextResponse.redirect here
-    return NextResponse.redirect(new URL("/login", origin))
+    // Create a redirect response and copy any pending cookies to it so they are preserved.
+    const redirectResponse = NextResponse.redirect(new URL("/login", origin))
+    pendingCookies.forEach(({ name, value, options }) => {
+      redirectResponse.cookies.set(name, value, options)
+    })
+    return redirectResponse
   }
 
   // Redirect to dashboard if already authenticated and on login page
   if (user && pathname === "/login") {
-    return NextResponse.redirect(new URL("/dashboard", origin))
+    const redirectResponse = NextResponse.redirect(new URL("/dashboard", origin))
+    pendingCookies.forEach(({ name, value, options }) => {
+      redirectResponse.cookies.set(name, value, options)
+    })
+    return redirectResponse
   }
 
   // 4. RETURN THE RESPONSE (WITH POTENTIALLY UPDATED COOKIES)
