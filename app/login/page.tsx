@@ -19,9 +19,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        // redirectTo: `${window.location.origin}/auth/callback`,
-        // For production, use the fixed domain
-        redirectTo: `https://replyyt.app/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
         scopes: "https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.force-ssl",
         queryParams: {
           access_type: "offline",

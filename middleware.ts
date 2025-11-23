@@ -42,7 +42,12 @@ export async function middleware(request: NextRequest) {
   // This call will trigger the 'setAll' function above if the session needs refreshing.
   const {
     data: { user },
+    error: userError ,
   } = await supabase.auth.getUser()
+
+  if (userError) {
+    console.error("[middleware] getUser error:", userError)
+  }
 
   const { pathname } = request.nextUrl
   const origin = request.url // Use request.url for full context
