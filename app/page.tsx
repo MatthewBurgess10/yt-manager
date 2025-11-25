@@ -341,10 +341,10 @@ export default function HomePage() {
                 <span className="font-bold text-lg">ReplyYT</span>
               </div>
               <nav className="flex gap-8 text-sm">
-                <Link href="/termsofservice" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link href="/terms-of-service" className="text-muted-foreground hover:text-foreground transition-colors">
                   Terms of Service
                 </Link>
-                <Link href="/privacypolicy" className="text-muted-foreground hover:text-foreground transition-colors">
+                <Link href="/privacy-policy" className="text-muted-foreground hover:text-foreground transition-colors">
                   Privacy Policy
                 </Link>
                 {/* <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
