@@ -13,13 +13,13 @@ export async function GET() {
     }
 
     console.log("[v0] Fetching YouTube channels...")
-
+    //api route
     const response = await fetch("https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&mine=true", {
       headers: {
         Authorization: `Bearer ${session.provider_token}`,
       },
     })
-
+    // if there is an error
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error("[v0] YouTube API error:", errorData)
@@ -40,7 +40,7 @@ export async function GET() {
     if (!data.items || data.items.length === 0) {
       return NextResponse.json({ error: "No YouTube channel found for this Google account" }, { status: 404 })
     }
-
+    
     const channels = data.items.map((channel: any) => ({
       channelId: channel.id,
       title: channel.snippet.title,

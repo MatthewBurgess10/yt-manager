@@ -31,7 +31,7 @@ export default function TermsOfService() {
           
           <header className="space-y-4 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-balance">
-              Terms of Service
+              ReplyYT Terms of Service
             </h1>
             <p className="text-muted-foreground text-sm">
               Last updated: March 2025
