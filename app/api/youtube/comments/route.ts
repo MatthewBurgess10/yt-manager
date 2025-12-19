@@ -200,6 +200,7 @@ export async function GET(request: Request) {
         console.error("[v0] Error fetching comments for video:", videoId, videoError)
       }
     }
+    
 
     console.log("[v0] Step 3: Calculating adaptive channel profile...")
 

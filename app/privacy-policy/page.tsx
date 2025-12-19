@@ -58,7 +58,6 @@ export default function PrivacyPolicy() {
               <p className="text-muted-foreground leading-relaxed">
                 ReplyYT accesses the following types of YouTube data, which are **essential for core functionality** but 
                 are **NEVER stored, persisted, or saved** on our servers beyond the immediate session needed to generate a suggestion. 
-                This access requires the OAuth scope: <code>https://www.googleapis.com/auth/youtube.force-ssl</code>.
               </p>
               <ul className="list-disc pl-6 text-muted-foreground leading-relaxed">
                 <li>**YouTube Comment Threads:** We access comment text, author details (display name, profile image), and metadata (like/dislike counts) for videos belonging to the authenticated user.</li>

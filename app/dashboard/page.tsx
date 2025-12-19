@@ -5,12 +5,14 @@ import { CommentsTable } from "@/components/comments-table"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { StatsCards } from "@/components/stats-cards"
 import { ChannelVerification } from "@/components/channel-verification"
-
+import { OverallSentiment } from "@/components/overall-sentiment";
+import { CommentsProvider } from "@/context/CommentsContext";
 
 
 export default function DashboardPage() {
   const commentsTableRef = useRef<HTMLDivElement>(null)
   const [comments, setComments] = useState<any[]>([])
+  const [overallSentiment, setOverallSentiment] = useState<string | null>(null)
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null)
 
   const handleViewHighPriority = () => {
@@ -33,10 +35,13 @@ export default function DashboardPage() {
       <DashboardHeader />
       <main className="container mx-auto px-4 lg:px-8 py-8 space-y-8">
         <ChannelVerification onChannelSelect={handleChannelSelect} />
-        <StatsCards comments={comments} onViewHighPriority={handleViewHighPriority} />
-        <div ref={commentsTableRef}>
-          <CommentsTable channelId={selectedChannelId} onCommentsLoaded={handleCommentsLoaded} />
-        </div>
+        <CommentsProvider>
+          <OverallSentiment />
+          <StatsCards comments={comments} onViewHighPriority={handleViewHighPriority} />
+          <div ref={commentsTableRef}>
+            <CommentsTable channelId={selectedChannelId} onCommentsLoaded={handleCommentsLoaded}/>
+          </div>
+        </CommentsProvider>
       </main>
     </div>
     

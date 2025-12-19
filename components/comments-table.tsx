@@ -8,22 +8,14 @@ import { ThumbsUp, MessageSquare, ExternalLink, TrendingUp, Loader2 } from "luci
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ReplyDialog } from "@/components/reply-dialog"
 import { CommentsFilter } from "@/components/comments-filter"
+import { useCommentsContext } from "@/context/CommentsContext";
+import { set } from "date-fns"
+import type { Comment } from "@/types/comment"
 
-interface Comment {
-  id: string
-  commentId: string
-  author: string
-  authorAvatar: string
-  text: string
-  videoTitle: string
-  videoId: string
-  likes: number
-  isQuestion: boolean
-  priorityScore: number
-  relativeScore?: string
-  timestamp: string
-  replied: boolean
-}
+
+
+
+
 
 type FilterType = "all" | "questions" | "unreplied" | "high-priority"
 type SortType = "priority" | "recent" | "likes"
@@ -35,13 +27,17 @@ interface CommentsTableProps {
 }
 
 export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channelId }: CommentsTableProps) {
-  const [comments, setComments] = useState<Comment[]>([])
+  const [comments, setLocalComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedComment, setSelectedComment] = useState<string | null>(null)
   const [filter, setFilter] = useState<FilterType>(initialFilter)
   const [sort, setSort] = useState<SortType>("priority")
   const [highPriorityThreshold, setHighPriorityThreshold] = useState(300)
+  const { setComments, setOverallSentiment } = useCommentsContext();
+
+
+
 
   useEffect(() => {
     console.log("[v0] CommentsTable received channelId:", channelId)
@@ -73,18 +69,25 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
       if (!response.ok) {
         throw new Error(data.error || "Failed to fetch comments")
       }
-
+      
       const fetchedComments = data.comments || []
       if (data.channelProfile?.highPriorityThreshold) {
         setHighPriorityThreshold(data.channelProfile.highPriorityThreshold)
         console.log("[v0] High priority threshold set to:", data.channelProfile.highPriorityThreshold)
       }
       console.log("[v0] Setting", fetchedComments.length, "comments in state")
-      setComments(fetchedComments)
+      //set as a local variable
+      setLocalComments(fetchedComments);
+      //set comments into context
+      setComments(fetchedComments);
+
 
       if (onCommentsLoaded) {
         console.log("[v0] Calling onCommentsLoaded with", fetchedComments.length, "comments")
         onCommentsLoaded(fetchedComments)
+      }
+      if (data.overallSentiment) {
+        console.log("[v0] Received overall sentiment:", data.overallSentiment)
       }
     } catch (err: any) {
       console.error("[v0] Error fetching comments:", err)
@@ -273,7 +276,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                         <ThumbsUp className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-semibold">{comment.likes}</span>
                       </div>
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="sm"
                         className="h-9 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"
@@ -281,7 +284,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Reply
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="ghost"
                         size="sm"
