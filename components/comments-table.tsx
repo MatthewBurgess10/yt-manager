@@ -276,7 +276,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                         <ThumbsUp className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-semibold">{comment.likes}</span>
                       </div>
-                      {/* <Button
+                      <Button
                         variant="ghost"
                         size="sm"
                         className="h-9 font-semibold hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"
@@ -284,7 +284,7 @@ export function CommentsTable({ initialFilter = "all", onCommentsLoaded, channel
                       >
                         <MessageSquare className="h-4 w-4 mr-2" />
                         Reply
-                      </Button> */}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
