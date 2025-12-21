@@ -157,7 +157,7 @@ export async function GET(request: Request) {
 
       try {
         const commentsResponse = await fetch(
-          `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&order=relevance`,
+          `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=100&order=relevancemoderationStatus=published`,
           {
             headers: {
               Authorization: `Bearer ${session.provider_token}`,

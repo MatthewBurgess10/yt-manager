@@ -34,8 +34,9 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-linear-to-br from-background via-background to-red-50/20 dark:to-red-950/5">
       <DashboardHeader />
       <main className="container mx-auto px-4 lg:px-8 py-8 space-y-8">
-        <ChannelVerification onChannelSelect={handleChannelSelect} />
+        
         <CommentsProvider>
+          <ChannelVerification onChannelSelect={handleChannelSelect} />
           <OverallSentiment />
           <StatsCards comments={comments} onViewHighPriority={handleViewHighPriority} />
           <div ref={commentsTableRef}>

@@ -23,7 +23,7 @@ export default function LoginPage() {
           "openid",
           "https://www.googleapis.com/auth/userinfo.profile",
           "https://www.googleapis.com/auth/userinfo.email",
-          "https://www.googleapis.com/auth/youtube"
+          "https://www.googleapis.com/auth/.force-ssl"
         ].join(" "),
         queryParams: {
           access_type: "offline",
