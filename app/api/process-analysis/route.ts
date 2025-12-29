@@ -12,11 +12,13 @@ const MAX_COMMENTS_PER_VIDEO = parseInt(process.env.MAX_COMMENTS_PER_VIDEO || '1
 export const maxDuration = 300; // 5 minutes for Vercel Pro
 
 export async function POST(request: NextRequest) {
+  let activeJobId: string | null = null;
   try {
     const body = await request.json();
-    const { jobId, channelId } = body;
+    activeJobId = body.jobId;
+    const { channelId } = body;
 
-    if (!jobId || !channelId) {
+    if (!activeJobId || !channelId) {
       return NextResponse.json(
         { error: 'Job ID and Channel ID are required' },
         { status: 400 }
@@ -24,74 +26,48 @@ export async function POST(request: NextRequest) {
     }
 
     // Update job status to processing
-    await updateJobStatus(jobId, 'processing', 5);
+    await updateJobStatus(activeJobId, 'processing', 5);
 
     // Get channel info
-    const { data: channel } = await supabaseAdmin
-      .from('channels')
+    const { data: job } = await supabaseAdmin
+      .from('analysis_jobs')
       .select('*')
-      .eq('id', channelId)
+      .eq('id', activeJobId)
       .single();
 
-    if (!channel) {
-      await updateJobStatus(jobId, 'failed', 0, 'Channel not found');
-      return NextResponse.json({ error: 'Channel not found' }, { status: 404 });
-    }
+    const targetVideoId = job.metadata.videoId;
 
-    // Step 1: Fetch videos
-    console.log(`Fetching videos for channel: ${channel.channel_name}`);
-    const videos = await fetchChannelVideos(channel.channel_id, MAX_VIDEOS);
-    await updateJobStatus(jobId, 'processing', 15);
+    // Step 1: Skip fetching multiple videos, just use the one provided
+    console.log(`Analyzing specific video: ${targetVideoId}`);
+    await updateJobStatus(activeJobId, 'processing', 15);
 
-    if (videos.length === 0) {
-      await updateJobStatus(jobId, 'failed', 0, 'No videos found');
-      return NextResponse.json({ error: 'No videos found' }, { status: 404 });
-    }
 
-    // Store videos in database
-    for (const video of videos) {
-      await supabaseAdmin.from('videos').upsert({
-        channel_id: channelId,
-        video_id: video.id,
-        title: video.title,
-        published_at: video.publishedAt,
-        view_count: video.viewCount,
-        comment_count: video.commentCount,
-      }, {
-        onConflict: 'video_id',
-        ignoreDuplicates: false,
+    // Step 2: Fetch comments for this video
+    const allComments: Array<{ videoId: string; text: string; author: string; likes: number; replies: number; publishedAt: string; commentId: string }> = [];
+
+
+    const comments = await fetchVideoComments(targetVideoId, MAX_COMMENTS_PER_VIDEO);
+
+    for (const comment of comments) {
+      allComments.push({
+        videoId: targetVideoId,
+        text: comment.text,
+        author: comment.authorName,
+        likes: comment.likeCount,
+        replies: comment.replyCount,
+        publishedAt: comment.publishedAt,
+        commentId: comment.id,
       });
     }
 
-    // Step 2: Fetch comments from all videos
-    console.log(`Fetching comments from ${videos.length} videos`);
-    const allComments: Array<{ videoId: string; text: string; author: string; likes: number; replies: number; publishedAt: string; commentId: string }> = [];
-    
-    for (let i = 0; i < videos.length; i++) {
-      const video = videos[i];
-      const comments = await fetchVideoComments(video.id, MAX_COMMENTS_PER_VIDEO);
-      
-      for (const comment of comments) {
-        allComments.push({
-          videoId: video.id,
-          text: comment.text,
-          author: comment.authorName,
-          likes: comment.likeCount,
-          replies: comment.replyCount,
-          publishedAt: comment.publishedAt,
-          commentId: comment.id,
-        });
-      }
-
-      // Update progress
-      const progress = 15 + Math.floor((i / videos.length) * 30);
-      await updateJobStatus(jobId, 'processing', progress);
-    }
+    // Update progress
+    const progress = 15 
+    await updateJobStatus(activeJobId, 'processing', progress);
 
     console.log(`Fetched ${allComments.length} total comments`);
 
     if (allComments.length === 0) {
-      await updateJobStatus(jobId, 'failed', 0, 'No comments found');
+      await updateJobStatus(activeJobId, 'failed', 0, 'No comments found');
       return NextResponse.json({ error: 'No comments found' }, { status: 404 });
     }
 
@@ -140,10 +116,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Filtered to ${filteredComments.length} relevant comments`);
-    await updateJobStatus(jobId, 'processing', 50);
+    await updateJobStatus(activeJobId, 'processing', 50);
 
     if (filteredComments.length === 0) {
-      await updateJobStatus(jobId, 'failed', 0, 'No relevant comments found after filtering');
+      await updateJobStatus(activeJobId, 'failed', 0, 'No relevant comments found after filtering');
       return NextResponse.json({ error: 'No relevant comments found' }, { status: 404 });
     }
 
@@ -151,7 +127,7 @@ export async function POST(request: NextRequest) {
     console.log('Generating embeddings...');
     const texts = filteredComments.map(c => c.text);
     const embeddings = await generateEmbeddingsBatched(texts);
-    await updateJobStatus(jobId, 'processing', 65);
+    await updateJobStatus(activeJobId, 'processing', 65);
 
     // Step 5: Cluster comments
     console.log('Clustering comments...');
@@ -167,12 +143,21 @@ export async function POST(request: NextRequest) {
     const topClusters = getTopClusters(clusters, 15);
     
     console.log(`Created ${topClusters.length} clusters`);
-    await updateJobStatus(jobId, 'processing', 75);
+    await updateJobStatus(activeJobId, 'processing', 75);
 
     // Step 6: Generate AI insights
     console.log('Generating insights...');
-    const insights = await generateClusterInsights(topClusters, channel.channel_name);
-    await updateJobStatus(jobId, 'processing', 85);
+    let insights;
+    try {
+      insights = await generateClusterInsights(topClusters, job);
+      if (!insights || insights.size === 0) {
+        throw new Error("AI failed to generate topic labels for your comments.");
+      }
+    } catch (aiError: any) {
+      console.error("AI Insight Error:", aiError);
+      throw new Error(`Insight Generation Failed: ${aiError.message}`);
+    }
+    await updateJobStatus(activeJobId, 'processing', 85);
 
     // Step 7: Store clusters
     for (const cluster of topClusters) {
@@ -181,7 +166,7 @@ export async function POST(request: NextRequest) {
       const { data: clusterRecord } = await supabaseAdmin
         .from('clusters')
         .insert({
-          analysis_job_id: jobId,
+          analysis_job_id: activeJobId,
           channel_id: channelId,
           label: clusterInsight?.label || 'Untitled Topic',
           comment_count: cluster.comments.length,
@@ -225,7 +210,7 @@ export async function POST(request: NextRequest) {
 
     const replyOpportunities = await generateReplySuggestions(
       highPriorityComments,
-      channel.channel_name
+      channelId
     );
 
     // Store reply opportunities
@@ -235,7 +220,7 @@ export async function POST(request: NextRequest) {
 
       if (comment) {
         await supabaseAdmin.from('reply_opportunities').insert({
-          analysis_job_id: jobId,
+          analysis_job_id: activeJobId,
           cluster_id: comment.clusterId,
           comment_id: comment.commentId,
           reason: opportunity.reason,
@@ -245,12 +230,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    await updateJobStatus(jobId, 'processing', 95);
+    await updateJobStatus(activeJobId, 'processing', 95);
 
     // Step 9: Generate PDF (placeholder for now)
     console.log('Generating PDF...');
     // TODO: Implement PDF generation
-    const pdfUrl = await generatePDF(jobId, channelId);
+    const pdfUrl = await generatePDF(activeJobId, channelId);
     
     // Mark job as complete
     await supabaseAdmin
@@ -261,31 +246,32 @@ export async function POST(request: NextRequest) {
         completed_at: new Date().toISOString(),
         pdf_url: pdfUrl,
       })
-      .eq('id', jobId);
+      .eq('id', activeJobId);
 
     console.log('Analysis complete!');
 
     return NextResponse.json({
       success: true,
-      jobId,
+      activeJobId,
       message: 'Analysis completed successfully',
     });
 
   } catch (error) {
     console.error('Error in process-analysis:', error);
     
-    const body = await request.json();
-    await updateJobStatus(
-      body.jobId,
-      'failed',
-      0,
-      error instanceof Error ? error.message : 'Unknown error'
-    );
+    if (activeJobId) {
+      await updateJobStatus(
+        activeJobId,
+        'failed',
+        0,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
 
-    return NextResponse.json(
-      { error: 'Analysis processing failed' },
-      { status: 500 }
-    );
+      return NextResponse.json(
+        { error: 'Analysis processing failed' },
+        { status: 500 }
+      );
+    }
   }
 }
 

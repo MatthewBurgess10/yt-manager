@@ -3,14 +3,68 @@
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useSearchParams } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Copy, Check, Download, ChevronDown, ChevronUp } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+
+// Define interfaces based on API response structure
+interface ResultsData {
+  topQuestions: Array<{
+    id: string;
+    label: string;
+    commentCount: number;
+    examples: string[];
+  }>;
+  videoIdeas: Array<{
+    title: string;
+    relatedTopic: string;
+  }>;
+  replyOpportunities: Array<{
+    id: string;
+    commentText: string;
+    commentLikes: number;
+    commentReplies: number;
+    reason: string;
+    suggestedReply: string;
+  }>;
+  pinnedComment: string | null;
+  pdfUrl?: string;
+  channel: {
+    subscriberCount: number;
+  }
+}
 
 export default function ResultsContent() {
   const searchParams = useSearchParams()
   const channel = searchParams.get("channel") || "@yourchannel"
+  const jobId = searchParams.get("jobId")
+
+  const [data, setData] = useState<ResultsData | null>(null)
+  const [loading, setLoading] = useState(true)
+
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const [expandedQuestions, setExpandedQuestions] = useState<Set<number>>(new Set())
+
+  // Fetch Data
+  useEffect(() => {
+    if (!jobId) return
+
+    const fetchResults = async () => {
+      try {
+        const res = await fetch(`/api/results/${jobId}`)
+        if (res.ok) {
+          const json = await res.json()
+          setData(json)
+        }
+      } catch (error) {
+        console.error("Failed to fetch results", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchResults()
+  }, [jobId])
 
   const copyToClipboard = (text: string, index: number) => {
     navigator.clipboard.writeText(text)
@@ -28,68 +82,32 @@ export default function ResultsContent() {
     setExpandedQuestions(newExpanded)
   }
 
-  const questions = [
-    {
-      question: "Why does this fail at step 3?",
-      count: 24,
-      examples: [
-        "I followed everything but it still doesn't work when I get to step 3. Any ideas?",
-        "Step 3 keeps giving me an error. What am I doing wrong?",
-        "The tutorial works until step 3, then it breaks. Help please!",
-      ],
-    },
-    {
-      question: "Can this be done without paid tools?",
-      count: 18,
-      examples: [
-        "Is there a free alternative? I can't afford the premium version right now.",
-        "Any way to do this without spending money?",
-        "What's the cheapest way to accomplish this?",
-      ],
-    },
-    {
-      question: "Does this work on Windows?",
-      count: 15,
-      examples: [
-        "I'm on Windows 11, will this still work?",
-        "Any Windows users here? Does it work?",
-        "Mac only or Windows compatible?",
-      ],
-    },
-  ]
+  const handleDownloadPdf = () => {
+    if (data?.pdfUrl) {
+      window.open(data.pdfUrl, '_blank')
+    }
+  }
+  if (loading) {
+     return (
+       <div className="min-h-screen bg-white container mx-auto px-4 py-16 max-w-5xl space-y-8">
+         <Skeleton className="h-16 w-1/2" />
+         <div className="grid sm:grid-cols-3 gap-6">
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+         </div>
+         <Skeleton className="h-96 w-full" />
+       </div>
+     )
+  }
 
-  const videoIdeas = [
-    '"Why beginners struggle with step 3"',
-    '"Free alternatives to expensive tools"',
-    '"Complete Windows setup guide"',
-    '"Common mistakes that break the workflow"',
-    '"Budget-friendly options for getting started"',
-  ]
+  if (!data) return <div>Error loading results.</div>
 
-  const highLeverageComments = [
-    {
-      comment: "Does this work on Windows? Mine keeps crashing at step 3.",
-      likes: 43,
-      replies: 12,
-      suggestedReply:
-        "Short answer: yes, but you need to install the Visual C++ Redistributable first. I'll pin a detailed Windows guide in the comments!",
-    },
-    {
-      comment: "Is there a free version of this tool? Can't afford the paid one right now.",
-      likes: 38,
-      replies: 8,
-      suggestedReply:
-        "Check out [Tool Name] - it's free and covers 90% of what you need. I actually started with it before upgrading.",
-    },
-  ]
+  // Calculate totals for stats cards
+  const totalCommentsAnalyzed = data.topQuestions.reduce((acc, q) => acc + q.commentCount, 0)
+  
 
-  const pinnedComment = `A lot of people are asking about Windows compatibility and free alternatives. 
-
-Windows users: You'll need Visual C++ Redistributable installed first (link in description).
-
-Free options: [Tool Name] is completely free and works great for beginners. I'll make a dedicated video on this next week!`
-
-  return (
+return (
     <div className="min-h-screen bg-white">
       <nav className="border-b border-border sticky top-0 bg-white z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
@@ -98,9 +116,15 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
               <div className="w-8 h-8 bg-primary rounded-lg" />
               <span className="text-xl font-semibold text-foreground">Replyt</span>
             </div>
-            <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 bg-transparent"
+              onClick={handleDownloadPdf}
+              disabled={!data.pdfUrl}
+            >
               <Download className="w-4 h-4" />
-              Download PDF
+              {data.pdfUrl ? "Download PDF" : "Generating PDF..."}
             </Button>
           </div>
         </div>
@@ -116,19 +140,20 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
 
         <div className="grid sm:grid-cols-3 gap-6">
           <Card className="p-6 bg-white border border-border shadow-sm">
-            <p className="text-sm text-muted-foreground mb-2">Total questions</p>
-            <p className="text-4xl font-bold text-foreground">10</p>
+            <p className="text-sm text-muted-foreground mb-2">Total questions found</p>
+            <p className="text-4xl font-bold text-foreground">{data.topQuestions.length}</p>
           </Card>
           <Card className="p-6 bg-white border border-border shadow-sm">
             <p className="text-sm text-muted-foreground mb-2">Video ideas generated</p>
-            <p className="text-4xl font-bold text-foreground">5</p>
+            <p className="text-4xl font-bold text-foreground">{data.videoIdeas.length}</p>
           </Card>
           <Card className="p-6 bg-white border border-border shadow-sm">
-            <p className="text-sm text-muted-foreground mb-2">Comments analyzed</p>
-            <p className="text-4xl font-bold text-foreground">247</p>
+            <p className="text-sm text-muted-foreground mb-2">Relevant Comments</p>
+            <p className="text-4xl font-bold text-foreground">{totalCommentsAnalyzed}</p>
           </Card>
         </div>
 
+        {/* TOP QUESTIONS SECTION */}
         <section className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold text-foreground mb-2">Top Questions Your Audience Is Asking</h2>
@@ -136,19 +161,19 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
           </div>
 
           <div className="space-y-4">
-            {questions.map((item, index) => (
+            {data.topQuestions.map((item, index) => (
               <Card key={index} className="p-6 space-y-4 bg-white border border-border shadow-sm">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
                         <span className="text-primary font-bold">{index + 1}</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-xl text-foreground mb-2">"{item.question}"</h3>
+                        <h3 className="font-semibold text-xl text-foreground mb-2">"{item.label}"</h3>
                         <div className="flex items-center gap-4 text-sm">
                           <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                            {item.count} comments
+                            {item.commentCount} comments
                           </span>
                         </div>
                       </div>
@@ -181,6 +206,7 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
           </div>
         </section>
 
+        {/* VIDEO IDEAS SECTION */}
         <section className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold text-foreground mb-2">High-Demand Video Ideas</h2>
@@ -189,18 +215,22 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
 
           <Card className="p-8 bg-white border border-border shadow-sm">
             <ul className="space-y-4">
-              {videoIdeas.map((idea, index) => (
+              {data.videoIdeas.map((idea, index) => (
                 <li key={index} className="flex items-start gap-4">
-                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shrink-0 mt-0.5">
                     <span className="text-white text-sm">→</span>
                   </div>
-                  <span className="text-lg text-foreground font-medium">{idea}</span>
+                  <div className="flex flex-col">
+                    <span className="text-lg text-foreground font-medium">{idea.title}</span>
+                    <span className="text-sm text-muted-foreground">Based on topic: {idea.relatedTopic}</span>
+                  </div>
                 </li>
               ))}
             </ul>
           </Card>
         </section>
 
+        {/* REPLY OPPORTUNITIES SECTION */}
         <section className="space-y-6">
           <div>
             <h2 className="text-3xl font-bold text-foreground mb-2">Comments You Should Reply To</h2>
@@ -208,20 +238,21 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
           </div>
 
           <div className="space-y-6">
-            {highLeverageComments.map((item, index) => (
+            {data.replyOpportunities.map((item, index) => (
               <Card key={index} className="p-6 space-y-4 bg-white border border-border shadow-sm">
                 <div className="space-y-3">
                   <div>
                     <h3 className="font-medium text-foreground mb-2">Comment:</h3>
-                    <p className="text-muted-foreground italic">"{item.comment}"</p>
+                    <p className="text-muted-foreground italic">"{item.commentText}"</p>
                   </div>
 
                   <div>
                     <h4 className="text-sm font-medium text-foreground mb-1">Why it matters:</h4>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• {item.likes} likes</li>
-                      <li>• {item.replies} replies</li>
-                      <li>• Repeated question</li>
+                    <p className="text-sm text-muted-foreground">{item.reason}</p>
+                    <ul className="text-sm text-muted-foreground space-y-1 mt-1">
+                      {/* Note: The API might return nulls for likes if not processed, default to 0 */}
+                      <li>• {item.commentLikes || 0} likes</li>
+                      <li>• {item.commentReplies || 0} replies</li>
                     </ul>
                   </div>
 
@@ -255,34 +286,37 @@ Free options: [Tool Name] is completely free and works great for beginners. I'll
           </div>
         </section>
 
-        <section className="space-y-6">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-2">Suggested Pinned Comment</h2>
-            <p className="text-muted-foreground">Address multiple common questions at once</p>
-          </div>
-
-          <Card className="p-8 space-y-6 bg-white border border-border shadow-sm">
-            <div className="bg-secondary/30 p-6 rounded-lg">
-              <p className="text-foreground whitespace-pre-line leading-relaxed">{pinnedComment}</p>
+        {/* PINNED COMMENT SECTION */}
+        {data.pinnedComment && (
+          <section className="space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold text-foreground mb-2">Suggested Pinned Comment</h2>
+              <p className="text-muted-foreground">Address multiple common questions at once</p>
             </div>
-            <Button
-              className="gap-2 bg-primary hover:bg-primary/90"
-              onClick={() => copyToClipboard(pinnedComment, 999)}
-            >
-              {copiedIndex === 999 ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Copied to clipboard!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copy pinned comment
-                </>
-              )}
-            </Button>
-          </Card>
-        </section>
+
+            <Card className="p-8 space-y-6 bg-white border border-border shadow-sm">
+              <div className="bg-secondary/30 p-6 rounded-lg">
+                <p className="text-foreground whitespace-pre-line leading-relaxed">{data.pinnedComment}</p>
+              </div>
+              <Button
+                className="gap-2 bg-primary hover:bg-primary/90"
+                onClick={() => copyToClipboard(data.pinnedComment!, 999)}
+              >
+                {copiedIndex === 999 ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied to clipboard!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy pinned comment
+                  </>
+                )}
+              </Button>
+            </Card>
+          </section>
+        )}
       </div>
     </div>
   )

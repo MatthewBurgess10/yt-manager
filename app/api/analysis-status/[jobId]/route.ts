@@ -3,10 +3,10 @@ import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> } // 1. Update Type to Promise
 ) {
   try {
-    const { jobId } = params;
+    const { jobId } = await params; // 2. Await the params
 
     if (!jobId) {
       return NextResponse.json(

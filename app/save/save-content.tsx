@@ -12,6 +12,8 @@ export default function SaveContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const channel = searchParams.get("channel")
+  const jobId = searchParams.get("jobId")
+
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -23,7 +25,7 @@ export default function SaveContent() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Redirect to results (in real app, user would click magic link)
-    router.push(`/results?channel=${encodeURIComponent(channel || "")}`)
+    router.push(`/results?channel=${encodeURIComponent(channel || "")}&jobId=${jobId}`)
   }
 
   return (

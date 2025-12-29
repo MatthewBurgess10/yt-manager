@@ -40,7 +40,7 @@ export function ReplytCTA() {
           <Input
             type="url"
             name="channel"
-            placeholder="https://youtube.com/@yourchannel"
+            placeholder="https://youtube.com/@yourvideolink"
             className="flex-1 h-12 text-base bg-white border-border"
             required
           />
