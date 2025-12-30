@@ -24,10 +24,10 @@ export interface ReplyOpportunity {
  */
 export async function generateClusterInsights(
   clusters: RankedCluster[],
-  channelName: string
-): Promise<Map<string, ClusterInsights>> {
+  channelName: string): Promise<Map<string, ClusterInsights>> {
+  // Pass the ID explicitly to the AI
   const clusterData = clusters.map(cluster => ({
-    id: cluster.id,
+    id: cluster.id, 
     commentCount: cluster.comments.length,
     totalLikes: cluster.totalLikes,
     examples: getClusterExamples(cluster, 5),
@@ -35,28 +35,26 @@ export async function generateClusterInsights(
 
   const prompt = `You are analyzing YouTube comments for the channel "${channelName}".
 
-Below are ${clusters.length} clusters of similar questions/issues from viewers. For each cluster, provide:
-1. A clear, concise label (5-10 words) describing the common theme
-2. A video idea that would address this topic
-3. A suggested pinned comment reply
+  Below are ${clusters.length} clusters. For each cluster, provide insights.
+  IMPORTANT: You MUST return the exact "clusterId" provided in the input for each cluster.
 
-Clusters:
-${clusterData.map((c, i) => `
-Cluster ${i + 1} (${c.commentCount} comments, ${c.totalLikes} likes):
-${c.examples.map((ex, j) => `  ${j + 1}. "${ex}"`).join('\n')}
-`).join('\n')}
+  Clusters to analyze:
+  ${clusterData.map((c) => `
+  ID: ${c.id} (${c.commentCount} comments, ${c.totalLikes} likes):
+  ${c.examples.map((ex, j) => `  - "${ex}"`).join('\n')}
+  `).join('\n')}
 
-Respond in valid JSON format:
-{
-  "clusters": [
-    {
-      "clusterId": "cluster_0",
-      "label": "...",
-      "videoIdea": "...",
-      "suggestedPinnedReply": "..."
-    }
-  ]
-}`;
+  Respond ONLY with valid JSON in this format:
+  {
+    "clusters": [
+      {
+        "clusterId": "the_id_provided_above",
+        "label": "Theme label",
+        "videoIdea": "Idea text",
+        "suggestedPinnedReply": "Reply text"
+      }
+    ]
+  }`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -67,18 +65,19 @@ Respond in valid JSON format:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
+        // Use JSON mode if available to ensure better parsing
+        response_format: { type: "json_object" }, 
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that analyzes YouTube comments and provides insights. Always respond with valid JSON.',
+            content: 'You are an expert analyst. You output strict JSON.',
           },
           {
             role: 'user',
             content: prompt,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 3000,
+        temperature: 0.3, // Lower temperature = more stable JSON
       }),
     });
 
@@ -88,13 +87,18 @@ Respond in valid JSON format:
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
     
-    // Parse JSON response
+    // Clean markdown if AI included it
+    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    
     const parsed = JSON.parse(content);
-    
-    // Convert to Map
     const insightsMap = new Map<string, ClusterInsights>();
+    
+    if (!parsed.clusters || !Array.isArray(parsed.clusters)) {
+        throw new Error("AI response missing clusters array");
+    }
+
     for (const item of parsed.clusters) {
       insightsMap.set(item.clusterId, {
         label: item.label,
@@ -104,9 +108,9 @@ Respond in valid JSON format:
     }
 
     return insightsMap;
-  } catch (error) {
-    console.error('Error generating cluster insights:', error);
-    throw new Error('Failed to generate cluster insights');
+  } catch (error: any) {
+    console.error('Detailed AI Error:', error);
+    throw new Error(`AI processing failed: ${error.message}`);
   }
 }
 

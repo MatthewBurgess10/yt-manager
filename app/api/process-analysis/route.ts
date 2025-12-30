@@ -35,7 +35,14 @@ export async function POST(request: NextRequest) {
       .eq('id', activeJobId)
       .single();
 
-    const targetVideoId = job.metadata.videoId;
+    const targetVideoId = job.metadata.videoId || job.video_id;
+
+    console.log(`DEBUG: Attempting to fetch comments for Video ID: "${targetVideoId}"`);
+    
+    if (!targetVideoId || targetVideoId.length !== 11) {
+      await updateJobStatus(activeJobId, 'failed', 0, `Invalid Video ID: ${targetVideoId}`);
+      return NextResponse.json({ error: 'Invalid Video ID' }, { status: 400 });
+    }
 
     // Step 1: Skip fetching multiple videos, just use the one provided
     console.log(`Analyzing specific video: ${targetVideoId}`);
@@ -47,6 +54,13 @@ export async function POST(request: NextRequest) {
 
 
     const comments = await fetchVideoComments(targetVideoId, MAX_COMMENTS_PER_VIDEO);
+    console.log(`DEBUG: YouTube API returned ${comments?.length || 0} comments`);
+
+    if (!comments || comments.length === 0) {
+        // Check if the API key is working or if comments are disabled on the video
+        await updateJobStatus(activeJobId, 'failed', 0, 'No comments found. Please check if comments are disabled on this video.');
+        return NextResponse.json({ error: 'No comments found' }, { status: 404 });
+    }
 
     for (const comment of comments) {
       allComments.push({

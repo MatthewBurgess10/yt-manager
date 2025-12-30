@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 export default function AnalyzePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const channelUrl = searchParams.get("channel")
+  const videoUrl = searchParams.get("channel") // should really rename this to video in the future - the parameter and everything
   
   // State for job management
   const [jobId, setJobId] = useState<string | null>(null)
@@ -26,7 +26,7 @@ export default function AnalyzePage() {
 
   // Step 1: Start the Analysis
   useEffect(() => {
-    if (!channelUrl || hasStartedRef.current) return
+    if (!videoUrl || hasStartedRef.current) return
     hasStartedRef.current = true
 
     const startAnalysis = async () => {
@@ -34,7 +34,7 @@ export default function AnalyzePage() {
         const response = await fetch('/api/analyze-channel', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ channelUrl })
+          body: JSON.stringify({ videoUrl })
         })
 
         if (!response.ok) throw new Error('Failed to start analysis')
@@ -53,7 +53,7 @@ export default function AnalyzePage() {
     }
 
     startAnalysis()
-  }, [channelUrl])
+  }, [videoUrl])
 
   // Step 2: Poll for Status
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function AnalyzePage() {
           if (data.status === 'complete') {
             clearInterval(pollInterval)
             // Redirect to preview with the Job ID
-            router.push(`/preview?jobId=${jobId}&channel=${encodeURIComponent(channelUrl || '')}`)
+            router.push(`/preview?jobId=${jobId}&channel=${encodeURIComponent(videoUrl || '')}`)
           } else if (data.status === 'failed') {
             setError(data.errorMessage || 'Analysis failed')
             clearInterval(pollInterval)
@@ -83,7 +83,7 @@ export default function AnalyzePage() {
     }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(pollInterval)
-  }, [jobId, status, router, channelUrl])
+  }, [jobId, status, router, videoUrl])
 
   // Determine active step based on progress percentage
   const currentStepIndex = Math.floor((progress / 100) * steps.length)

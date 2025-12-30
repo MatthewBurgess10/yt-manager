@@ -136,10 +136,11 @@ export async function fetchChannelVideos(channelId: string, limit: number = 10):
 /**
  * Extracts Video ID from standard, short, and Shorts YouTube URLs
  */
-export function extractVideoId(url: string): string | null {
-  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
-  const match = url.match(regExp);
-  return match ? match[1] : null;
+export function extractVideoId(url: string) {
+  if (!url) return null; // Add this safety check
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const match = url.match(regExp); // This is where it was crashing
+  return (match && match[7].length === 11) ? match[7] : null;
 }
 
 /**
@@ -151,6 +152,13 @@ export async function fetchVideoDetails(videoId: string) {
     const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${YOUTUBE_API_KEY}`;
     
     const res = await fetch(apiUrl);
+    console.log('DEBUG: YouTube API Status:', res.status); 
+  
+    if (!res.ok) {
+      const errBody = await res.json();
+      console.error('DEBUG: YouTube API Error Body:', errBody);
+      return null;
+    }
     const data = await res.json();
 
     const video = data.items?.[0];
@@ -175,28 +183,25 @@ export async function fetchVideoDetails(videoId: string) {
  * Fetch comments for a specific video
  * Matches your original fetchVideoComments style
  */
-export async function fetchVideoComments(videoId: string, limit: number = 100): Promise<CommentInfo[]> {
-  try {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=${limit}&order=relevance&textFormat=plainText&key=${YOUTUBE_API_KEY}`
-    );
-    const data = await res.json();
+export async function fetchVideoComments(videoId: string, maxResults: number = 100) {
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  // Use commentThreads instead of comments for top-level access
+  const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=${maxResults}&key=${apiKey}&order=relevance`;
 
-    if (!data.items) return [];
+  const res = await fetch(url);
+  const data = await res.json();
 
-    return data.items.map((item: any) => {
-      const topComment = item.snippet.topLevelComment.snippet;
-      return {
-        id: item.id,
-        text: topComment.textDisplay,
-        authorName: topComment.authorDisplayName,
-        likeCount: topComment.likeCount,
-        replyCount: item.snippet.totalReplyCount,
-        publishedAt: topComment.publishedAt,
-      };
-    });
-  } catch (error) {
-    console.error('Error fetching comments:', error);
+  if (data.error) {
+    console.error("YouTube API Error:", data.error.message);
     return [];
   }
+
+  return data.items?.map((item: any) => ({
+    id: item.id,
+    text: item.snippet.topLevelComment.snippet.textDisplay,
+    authorName: item.snippet.topLevelComment.snippet.authorDisplayName,
+    likeCount: item.snippet.topLevelComment.snippet.likeCount,
+    publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
+    replyCount: item.snippet.totalReplyCount,
+  })) || [];
 }
