@@ -1,3 +1,5 @@
+
+
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 
 if (!YOUTUBE_API_KEY) {
@@ -183,25 +185,62 @@ export async function fetchVideoDetails(videoId: string) {
  * Fetch comments for a specific video
  * Matches your original fetchVideoComments style
  */
-export async function fetchVideoComments(videoId: string, maxResults: number = 100) {
+export async function fetchVideoComments(videoId: string, maxLimit: number = 500): Promise<CommentInfo[]> {
   const apiKey = process.env.YOUTUBE_API_KEY;
-  // Use commentThreads instead of comments for top-level access
-  const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=${maxResults}&key=${apiKey}&order=relevance`;
+  let allComments: CommentInfo[] = [];
+  let nextPageToken: string | undefined = undefined;
 
-  const res = await fetch(url);
-  const data = await res.json();
+  // Loop until we reach the limit or run out of pages
+  do {
+    // Calculate how many we still need
+    const remaining = maxLimit - allComments.length;
+    if (remaining <= 0) break;
+    
+    // YouTube maxResults per page is 100
+    const fetchSize = Math.min(remaining, 100);
 
-  if (data.error) {
-    console.error("YouTube API Error:", data.error.message);
-    return [];
-  }
+    let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=${fetchSize}&order=relevance&textFormat=plainText&key=${apiKey}`;
+    
+    if (nextPageToken) {
+      url += `&pageToken=${nextPageToken}`;
+    }
 
-  return data.items?.map((item: any) => ({
-    id: item.id,
-    text: item.snippet.topLevelComment.snippet.textDisplay,
-    authorName: item.snippet.topLevelComment.snippet.authorDisplayName,
-    likeCount: item.snippet.topLevelComment.snippet.likeCount,
-    publishedAt: item.snippet.topLevelComment.snippet.publishedAt,
-    replyCount: item.snippet.totalReplyCount,
-  })) || [];
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data.error) {
+        console.error("YouTube API Error:", data.error.message);
+        break; 
+      }
+
+      if (!data.items || data.items.length === 0) break;
+
+      const pageComments = data.items.map((item: any) => {
+        const topComment = item.snippet.topLevelComment.snippet;
+        return {
+          id: item.id,
+          text: topComment.textDisplay,
+          authorName: topComment.authorDisplayName,
+          likeCount: topComment.likeCount,
+          replyCount: item.snippet.totalReplyCount,
+          publishedAt: topComment.publishedAt,
+        };
+      });
+
+      allComments = [...allComments, ...pageComments];
+      nextPageToken = data.nextPageToken;
+
+    } catch (error) {
+      console.error('Error fetching comments page:', error);
+      break;
+    }
+    
+    // Safety break to prevent infinite loops (e.g. max 10 pages)
+    if (allComments.length >= maxLimit) break;
+
+  } while (nextPageToken);
+
+  console.log(`Total comments fetched: ${allComments.length}`);
+  return allComments;
 }

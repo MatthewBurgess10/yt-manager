@@ -28,6 +28,10 @@ const QUESTION_STARTERS = [
   'aren\'t',
 ];
 
+const FEEDBACK_SIGNALS = [
+  'wish', 'hope', 'please', 'love', 'hate', 'bad', 'great', 'amazing', 'terrible', 'worst', 'best', 'add', 'fix', 'change', 'stop', 'start', 'more of'
+];
+
 const CONFUSION_SIGNALS = [
   'doesn\'t work',
   'not working',
@@ -63,37 +67,26 @@ export interface FilteredComment {
 export function shouldKeepComment(text: string): boolean {
   const normalized = text.toLowerCase().trim();
 
-  // Skip very short comments
-  if (normalized.length < 10) return false;
+  // 1. Length Check: Too short = spam, Too long = rant (maybe keep long ones?)
+  if (normalized.length < 15) return false; 
+  if (normalized.length > 1000) return false; // Skip massive essays to save tokens
 
-  // Skip common noise
-  const noisePatterns = [
-    /^first$/i,
-    /^nice$/i,
-    /^great$/i,
-    /^love it$/i,
-    /^good video$/i,
-    /^awesome$/i,
-    /^cool$/i,
-    /^thanks$/i,
-    /^thank you$/i,
-    /^\d+$/,  // Just numbers
-    /^[👍👎❤️😂😮😢😡🔥💯✨]+$/,  // Just emojis
-  ];
-
-  for (const pattern of noisePatterns) {
-    if (pattern.test(normalized)) return false;
-  }
-
-  // Keep if contains a question mark
+  // 2. Spam Filters (URLs, timestamps only, emojis only)
+  if (normalized.includes('http') || normalized.includes('.com')) return false;
+  if (/^[\d: ]+$/.test(normalized)) return false; // "10:02"
+  
+  // 3. Keep if Question
   if (text.includes('?')) return true;
-
-  // Keep if starts with question words
-  for (const starter of QUESTION_STARTERS) {
-    if (normalized.startsWith(starter + ' ')) return true;
+  for (const start of QUESTION_STARTERS) {
+    if (normalized.startsWith(start + ' ')) return true;
   }
 
-  // Keep if contains confusion signals
+  // 4. Keep if Strong Feedback
+  for (const signal of FEEDBACK_SIGNALS) {
+    if (normalized.includes(signal)) return true;
+  }
+
+  // 5. Keep if Confusion
   for (const signal of CONFUSION_SIGNALS) {
     if (normalized.includes(signal)) return true;
   }

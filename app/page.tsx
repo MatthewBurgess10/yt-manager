@@ -39,7 +39,7 @@ export default function LandingPage() {
               The modern way to understand your YouTube audience
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto text-pretty">
-              Turn comments into content ideas. Find what your audience keeps asking and what you should answer next.
+              See what your YouTube audience keeps asking — and what to create next
             </p>
           </div>
 
@@ -55,6 +55,7 @@ export default function LandingPage() {
               <Button type="submit" size="lg" className="h-14 px-8 bg-primary hover:bg-primary/90">
                 Analyze Channel
               </Button>
+              
             </div>
           </form>
         </div>

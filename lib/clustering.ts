@@ -22,7 +22,7 @@ export interface RankedCluster extends Cluster {
   rank: number;
 }
 
-const SIMILARITY_THRESHOLD = 0.85;
+const SIMILARITY_THRESHOLD = 0.60;
 
 /**
  * Cluster comments using centroid-based approach
@@ -138,7 +138,7 @@ export function rankClusters(clusters: Cluster[]): RankedCluster[] {
  */
 export function getTopClusters(
   clusters: Cluster[],
-  topN: number = 15
+  topN: number = 300
 ): RankedCluster[] {
   const ranked = rankClusters(clusters);
   return ranked.slice(0, topN);
