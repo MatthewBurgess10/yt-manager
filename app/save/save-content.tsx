@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -16,16 +16,40 @@ export default function SaveContent() {
 
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isSent, setIsSent] = useState(false)
+  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
-    // Simulate sending magic link
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Redirect to results (in real app, user would click magic link)
-    router.push(`/results?channel=${encodeURIComponent(channel || "")}&jobId=${jobId}`)
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        // sent to correct results page.
+        emailRedirectTo: `${window.location.origin}/results?channel=${encodeURIComponent(channel || "")}&jobId=${jobId}`
+      }
+    })
+    setLoading(false)
+    if (error) {
+      console.error("Error sending magic link:", error)
+    } else {
+      setIsSent(true)
+      console.log("Magic link sent!")
+    }
+  }
+  if (isSent) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-8 text-center space-y-4">
+          <h1 className="text-2xl font-bold">Check your email</h1>
+          <p className="text-muted-foreground">
+            We've sent a secure link to <strong>{email}</strong>. 
+            Click the link in the email to unlock your full report.
+          </p>
+        </Card>
+      </div>
+    )
   }
 
   return (

@@ -15,6 +15,9 @@ export interface ReplyOpportunity {
   priorityScore: number;
 }
 
+/**
+ * Generate insights with Context Awareness
+ */
 export async function generateClusterInsights(
   clusters: RankedCluster[],
   channelName: string,
@@ -39,7 +42,7 @@ Below are ${clusters.length} clusters of viewer comments. For each cluster, prov
 2. A unique video idea (Ensure it is NOT similar to the "Recent Videos" listed above).
 3. A suggested pinned reply.
 
-IMPORTANT: You MUST return the exact "clusterId" provided in the input for each item.
+IMPORTANT: You MUST return the exact "clusterId" provided in the input.
 
 Clusters:
 ${clusterData.map((c) => `
@@ -69,7 +72,7 @@ Respond ONLY with valid JSON:
       model: 'gpt-4o-mini',
       response_format: { type: "json_object" },
       messages: [
-        { role: 'system', content: 'You are an expert YouTube strategist. Output strict JSON.' },
+        { role: 'system', content: 'You are an expert YouTube strategist.' },
         { role: 'user', content: prompt },
       ],
       temperature: 0.4,
@@ -77,32 +80,29 @@ Respond ONLY with valid JSON:
   });
 
   const data = await response.json();
-  const content = data.choices[0].message.content;
-  const parsed = JSON.parse(content);
-  
+  const parsed = JSON.parse(data.choices[0].message.content);
   const insightsMap = new Map<string, ClusterInsights>();
   
-  // FIXED: Added safety check to prevent "undefined" error
-  if (parsed && parsed.clusters && Array.isArray(parsed.clusters)) {
-    parsed.clusters.forEach((item: any) => {
-      if (item && item.clusterId) {
-        insightsMap.set(item.clusterId, {
-          label: item.label || 'Discussion Topic',
-          videoIdea: item.videoIdea || 'Deep dive into this topic',
-          suggestedPinnedReply: item.suggestedPinnedReply || 'Thanks for the feedback!',
-        });
-      }
+  parsed.clusters.forEach((item: any) => {
+    insightsMap.set(item.clusterId, {
+      label: item.label,
+      videoIdea: item.videoIdea,
+      suggestedPinnedReply: item.suggestedPinnedReply,
     });
-  }
+  });
 
   return insightsMap;
 }
 
+/**
+ * Generate suggestions for individual high-value comments
+ */
 export async function generateReplySuggestions(
   comments: Array<{ text: string; likeCount: number; clusterLabel?: string }>,
   channelName: string
 ): Promise<ReplyOpportunity[]> {
-  const prompt = `Analyze these YouTube comments for "${channelName}" and suggest which deserve a reply.
+  const prompt = `You are a community manager for the YouTube channel "${channelName}".
+Analyze these comments and suggest which ones deserve a personal reply.
 
 Comments:
 ${comments.map((c, i) => `ID: ${i}\nText: "${c.text}"\nTopic: ${c.clusterLabel || 'General'}`).join('\n\n')}
@@ -111,10 +111,10 @@ Respond ONLY with JSON:
 {
   "replies": [
     {
-      "commentIndex": 0,
-      "reason": "Why high priority",
-      "suggestedReply": "Reply text",
-      "priorityScore": 90
+      "commentId": 0,
+      "reason": "Why this comment is high priority",
+      "suggestedReply": "What the creator should say",
+      "priorityScore": 85
     }
   ]
 }`;
@@ -129,7 +129,7 @@ Respond ONLY with JSON:
       model: 'gpt-4o-mini',
       response_format: { type: "json_object" },
       messages: [
-        { role: 'system', content: 'You are a community manager.' },
+        { role: 'system', content: 'You are an expert community manager.' },
         { role: 'user', content: prompt },
       ],
     }),
@@ -137,5 +137,5 @@ Respond ONLY with JSON:
 
   const data = await response.json();
   const parsed = JSON.parse(data.choices[0].message.content);
-  return parsed.replies || [];
+  return parsed.replies;
 }

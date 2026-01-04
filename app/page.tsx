@@ -48,12 +48,12 @@ export default function LandingPage() {
               <Input
                 type="url"
                 name="channel"
-                placeholder="https://youtube.com/@yourchannel"
+                placeholder="https://youtube.com/@yourvideo"
                 className="flex-1 h-14 text-base bg-white border-border shadow-sm"
                 required
               />
               <Button type="submit" size="lg" className="h-14 px-8 bg-primary hover:bg-primary/90">
-                Analyze Channel
+                Analyze Video
               </Button>
               
             </div>

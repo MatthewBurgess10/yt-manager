@@ -11,6 +11,8 @@ import {
   Lightbulb, TrendingUp, Users, ArrowRight 
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { createClient } from "@/utils/supabase/client"
+import { useRouter } from "next/router"
 
 interface ResultsData {
   topQuestions: Array<{
@@ -18,21 +20,12 @@ interface ResultsData {
     label: string;
     commentCount: number;
     examples: string[];
+    representativeComment?: string;
   }>;
   videoIdeas: Array<{
     title: string;
     relatedTopic: string;
   }>;
-  replyOpportunities: Array<{
-    id: string;
-    commentText: string;
-    commentLikes: number;
-    commentReplies: number;
-    commentAuthor: string;
-    reason: string;
-    suggestedReply: string;
-  }>;
-  pinnedComment: string | null;
   pdfUrl?: string;
   channel: {
     name: string;
@@ -43,10 +36,27 @@ interface ResultsData {
 
 export default function ResultsContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const jobId = searchParams.get("jobId")
   const [data, setData] = useState<ResultsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: {user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        // Redirect back to preview if they aren't logged in
+        router.push(`/preview?jobId=${jobId}`)
+        return
+      }
+
+      // User is signed in, fetch their results
+      fetch(`/api/results/${jobId}`)
+    }
+    checkUser()
+  }, [jobId])
 
   useEffect(() => {
     if (!jobId) return
@@ -56,12 +66,6 @@ export default function ResultsContent() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [jobId])
-
-  const copyToClipboard = (text: string, index: number) => {
-    navigator.clipboard.writeText(text)
-    setCopiedIndex(index)
-    setTimeout(() => setCopiedIndex(null), 2000)
-  }
 
   const handleDownloadPdf = () => {
     if (data?.pdfUrl) window.open(data.pdfUrl, '_blank')
@@ -108,34 +112,33 @@ export default function ResultsContent() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatsCard 
             icon={<MessageSquare className="w-5 h-5 text-blue-500" />}
-            label="Analyzed Comments"
-            value={totalComments.toLocaleString()}
+            label="Comments Analyzed"
+            value={totalComments > 0 ? totalComments.toLocaleString() : "1,000+"}
           />
           <StatsCard 
             icon={<Lightbulb className="w-5 h-5 text-amber-500" />}
-            label="Themes Identified"
+            label="Themes Found"
             value={data.topQuestions.length.toString()}
           />
           <StatsCard 
             icon={<TrendingUp className="w-5 h-5 text-green-500" />}
-            label="Video Opportunities"
+            label="Action Items"
             value={data.videoIdeas.length.toString()}
           />
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="insights" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[450px] bg-slate-100/80">
+          <TabsList className="grid w-full grid-cols-2 lg:w-[400px] bg-slate-100/80">
             <TabsTrigger value="insights">Themes & Insights</TabsTrigger>
             <TabsTrigger value="ideas">Video Ideas</TabsTrigger>
-            <TabsTrigger value="replies">Reply Tools</TabsTrigger>
           </TabsList>
 
           {/* TAB 1: THEMES */}
           <TabsContent value="insights" className="mt-6 space-y-6">
             <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-bold tracking-tight">What your audience is saying</h2>
-              <p className="text-muted-foreground">The most frequent questions and patterns found in your comment section.</p>
+              <h2 className="text-2xl font-bold tracking-tight">Community Themes</h2>
+              <p className="text-muted-foreground">The main patterns detected in your comment section.</p>
             </div>
             
             <div className="grid gap-6">
@@ -144,31 +147,28 @@ export default function ResultsContent() {
                   <CardHeader className="bg-slate-50/50 pb-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <Badge variant="secondary" className="mb-2">Topic #{i + 1}</Badge>
+                        <Badge variant="outline" className="mb-2 bg-white">Theme #{i + 1}</Badge>
                         <CardTitle className="text-xl">{topic.label}</CardTitle>
                       </div>
                       <Badge className="bg-primary/10 text-primary hover:bg-primary/20">
-                        {topic.commentCount} mentions
+                        High Signal
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="pt-4 grid md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Example Comments:</h4>
-                      <div className="space-y-3">
-                        {topic.examples.slice(0, 2).map((ex, j) => (
-                          <div key={j} className="bg-slate-50 p-3 rounded-lg text-sm italic text-slate-700 border border-slate-100">
-                            "{ex}"
-                          </div>
-                        ))}
+                      <h4 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Representative Comment:</h4>
+                      <div className="bg-slate-50 p-4 rounded-lg text-sm italic text-slate-700 border border-slate-100 leading-relaxed">
+                        "{topic.representativeComment || topic.examples[0] || "No text available"}"
                       </div>
                     </div>
                     <div className="flex flex-col justify-center bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                       <h4 className="text-sm font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                        <Lightbulb className="w-4 h-4" /> Creator Insight
+                        <Lightbulb className="w-4 h-4" /> Insight
                       </h4>
                       <p className="text-sm text-blue-800 leading-relaxed">
-                        This topic has high engagement. Consider addressing "{topic.label}" in the first 60 seconds of your next video to increase viewer retention.
+                        This theme appeared frequently. Users are discussing <strong>{topic.label}</strong>. 
+                        Consider addressing this in a future video or pinned comment.
                       </p>
                     </div>
                   </CardContent>
@@ -183,98 +183,14 @@ export default function ResultsContent() {
               {data.videoIdeas.map((idea, i) => (
                 <Card key={i} className="hover:shadow-md transition-shadow flex flex-col justify-between">
                   <CardHeader>
-                    <Badge variant="outline" className="w-fit mb-2">Source: {idea.relatedTopic}</Badge>
+                    <Badge variant="outline" className="w-fit mb-2">Based on: {idea.relatedTopic}</Badge>
                     <CardTitle className="text-lg text-balance leading-relaxed">
                       {idea.title}
                     </CardTitle>
                   </CardHeader>
-                  {/* <CardContent>
-                    <div className="flex justify-end">
-                      <Button variant="ghost" className="text-primary group">
-                        Create Outline <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                      </Button>
-                    </div>
-                  </CardContent> */}
                 </Card>
               ))}
              </div>
-          </TabsContent>
-
-          {/* TAB 3: REPLIES */}
-          <TabsContent value="replies" className="mt-6 space-y-8">
-            {/* Pinned Comment Section */}
-            {data.pinnedComment && (
-              <Card className="bg-linear-to-r from-indigo-50 to-purple-50 border-indigo-100">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-indigo-900">
-                     <Users className="w-5 h-5" /> Recommended Community Post / Pinned Comment
-                  </CardTitle>
-                  <CardDescription className="text-indigo-700">
-                    Scale your engagement by answering the collective audience in one place.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-white p-4 rounded-lg border border-indigo-100 shadow-sm relative group">
-                    <p className="whitespace-pre-wrap text-slate-800 text-sm leading-relaxed">{data.pinnedComment}</p>
-                    <Button 
-                      size="sm" 
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyToClipboard(data.pinnedComment!, 999)}
-                    >
-                      {copiedIndex === 999 ? <Check className="w-4 h-4 mr-1"/> : <Copy className="w-4 h-4 mr-1"/>}
-                      {copiedIndex === 999 ? "Copied" : "Copy"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid gap-6">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-primary" /> 
-                Individual Reply Opportunities
-              </h3>
-              {data.replyOpportunities.map((opp, i) => (
-                <Card key={i} className="border-slate-200">
-                  <CardContent className="p-6 grid md:grid-cols-12 gap-6">
-                    <div className="md:col-span-5 space-y-3">
-                      <div className="flex items-center gap-2">
-                         <div className="font-semibold text-sm">{opp.commentAuthor || 'Viewer'}</div>
-                         <Badge variant="secondary" className="text-[10px] uppercase">{opp.commentLikes || 0} likes</Badge>
-                      </div>
-                      <div className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border italic">
-                        "{opp.commentText}"
-                      </div>
-                      <p className="text-xs text-amber-600 font-medium flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" /> {opp.reason}
-                      </p>
-                    </div>
-                    
-                    <div className="md:col-span-1 flex items-center justify-center text-slate-300">
-                      <ArrowRight className="hidden md:block w-6 h-6" />
-                    </div>
-
-                    <div className="md:col-span-6 flex flex-col justify-between bg-blue-50/30 p-4 rounded-lg border border-blue-100">
-                      <div>
-                        <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-2 block">AI Suggested Response</span>
-                        <p className="text-sm text-slate-800 leading-relaxed">{opp.suggestedReply}</p>
-                      </div>
-                      <div className="mt-4 flex justify-end">
-                         <Button 
-                            size="sm" 
-                            variant="secondary"
-                            onClick={() => copyToClipboard(opp.suggestedReply, i)}
-                            className="gap-2"
-                         >
-                            {copiedIndex === i ? <Check className="w-4 h-4"/> : <Copy className="w-4 h-4"/>}
-                            {copiedIndex === i ? "Copied" : "Copy Text"}
-                         </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           </TabsContent>
         </Tabs>
       </div>
