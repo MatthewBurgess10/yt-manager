@@ -38,6 +38,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`font-sans antialiased`}>
         {children}
+
+        {/* Feedback Widget */}
+        <script
+          src="https://www.boosttoad.com/api/widget/bundle?projectId=e2118a0c-11a3-4821-a600-d04844fd6c3a"
+          async
+        />
+
       </body>
     </html>
   )

@@ -24,7 +24,7 @@ const StepCard: React.FC<StepCardProps> = ({ icon, title, description, benefits 
     <ul className="space-y-3">
       {benefits.map((benefit, index) => (
         <li key={index} className="flex items-center gap-3">
-          <div className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-primary/20">
+          <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20">
             <div className="h-2 w-2 rounded-full bg-primary"></div>
           </div>
           <span className="text-sm text-muted-foreground">{benefit}</span>
