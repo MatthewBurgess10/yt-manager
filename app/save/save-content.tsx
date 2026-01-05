@@ -22,12 +22,17 @@ export default function SaveContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    // Construct the final destination path
+    const targetPath = `/results?jobId=${jobId}`;
+    
+    // Encode it so it can safely pass through as a single string parameter
+    const encodedPath = encodeURIComponent(targetPath);
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
         // sent to correct results page.
-        emailRedirectTo: `${window.location.origin}/results?channel=${encodeURIComponent(channel || "")}&jobId=${jobId}`
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodedPath}`,
       }
     })
     setLoading(false)

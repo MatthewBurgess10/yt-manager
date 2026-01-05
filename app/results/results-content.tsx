@@ -7,12 +7,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { 
-  Copy, Check, Download, MessageSquare, 
+  Copy, Check, RotateCcw, MessageSquare, 
   Lightbulb, TrendingUp, Users, ArrowRight 
 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { createClient } from "@/utils/supabase/client"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 
 interface ResultsData {
   topQuestions: Array<{
@@ -67,13 +67,14 @@ export default function ResultsContent() {
       .finally(() => setLoading(false))
   }, [jobId])
 
-  const handleDownloadPdf = () => {
-    if (data?.pdfUrl) window.open(data.pdfUrl, '_blank')
+  const newAnalysis = () => {
+    // send them back to the start.
+    router.push('/')
   }
 
   if (loading) return (
     <div className="p-20 text-center">
-      <Skeleton className="h-[600px] w-full max-w-4xl mx-auto rounded-xl" />
+      <Skeleton className="h-150 w-full max-w-4xl mx-auto rounded-xl" />
     </div>
   )
   
@@ -101,8 +102,8 @@ export default function ResultsContent() {
             <p className="text-xs text-muted-foreground">Analysis Report</p>
           </div>
         </div>
-        <Button onClick={handleDownloadPdf} disabled={!data.pdfUrl} variant="outline" className="gap-2">
-          <Download className="w-4 h-4" /> Export PDF
+        <Button onClick={newAnalysis} disabled={!data.pdfUrl} variant="outline" className="gap-2">
+          <RotateCcw className="w-4 h-4" /> New Analysis
         </Button>
       </nav>
 
@@ -129,7 +130,7 @@ export default function ResultsContent() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="insights" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:w-[400px] bg-slate-100/80">
+          <TabsList className="grid w-full grid-cols-2 lg:w-100 bg-slate-100/80">
             <TabsTrigger value="insights">Themes & Insights</TabsTrigger>
             <TabsTrigger value="ideas">Video Ideas</TabsTrigger>
           </TabsList>
