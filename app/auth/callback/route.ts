@@ -16,6 +16,6 @@ export async function GET(request: Request) {
     }
   }
 
-  // If there's an error, send them to a login page with a message
-  return NextResponse.redirect(`${origin}/login?message=Could not authenticate user`)
+  // FAILURE: Send them to the error page
+  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
